@@ -1,6 +1,6 @@
 # Family Site AI Service
 
-An AI-powered microservice built with FastAPI to enhance the Family Recipe Site with intelligent recipe suggestions and recipe text parsing.
+An AI-powered microservice built with FastAPI to enhance the Family Recipe Site with intelligent recipe suggestions and recipe text parsing. This service uses OpenRouter for AI capabilities.
 
 ## 📋 Overview
 
@@ -14,7 +14,7 @@ This service provides AI capabilities to the main Family Site application throug
 ## 🛠️ Technology Stack
 
 - **FastAPI**: Modern, fast web framework for building APIs
-- **OpenAI API**: For AI-powered recipe analysis and generation
+- **OpenRouter API**: For AI-powered recipe analysis and generation
 - **Docker**: For containerization and deployment
 - **Python 3.11+**: Core programming language
 
@@ -24,7 +24,7 @@ This service provides AI capabilities to the main Family Site application throug
 
 - Python 3.11 or higher
 - Docker and Docker Compose
-- OpenAI API key
+- OpenRouter API key
 
 ### Development Setup
 
@@ -43,8 +43,11 @@ This service provides AI capabilities to the main Family Site application throug
 
 3. Create `.env` file with required environment variables:
    ```
-   API_KEY=your_secret_api_key
-   OPENAI_API_KEY=your_openai_api_key
+   OPENROUTER_API_KEY=your_openrouter_api_key
+   OPENROUTER_URL=https://api.openrouter.com/v1
+   OPENROUTER_MODEL=your_chosen_model
+   OPENROUTER_SITE_URL=your_site_url
+   OPENROUTER_APP_NAME=Family Recipe AI
    ENVIRONMENT=development
    ```
 
@@ -68,12 +71,37 @@ This service provides AI capabilities to the main Family Site application throug
 
 | Variable | Description | Required | Default |
 |----------|-------------|----------|---------|
-| `API_KEY` | Secret API key for service authentication | Yes | - |
-| `OPENAI_API_KEY` | OpenAI API key for AI functionality | Yes | - |
+| `OPENROUTER_API_KEY` | OpenRouter API key for AI functionality | Yes | - |
+| `OPENROUTER_URL` | OpenRouter API endpoint | No | https://api.openrouter.com/v1 |
+| `OPENROUTER_MODEL` | Model to use for AI generation | Yes | - |
+| `OPENROUTER_SITE_URL` | Your site URL for request validation | Yes | - |
+| `OPENROUTER_APP_NAME` | Your application name | Yes | - |
 | `ENVIRONMENT` | Deployment environment (development/production) | No | development |
 | `HOST` | Host to bind the server to | No | 0.0.0.0 |
 | `PORT` | Port to bind the server to | No | 8000 |
 | `ALLOWED_ORIGINS` | Comma-separated list of allowed CORS origins | No | http://localhost:5001,https://family-site.pythonanywhere.com |
+
+## 🤖 OpenRouter Models
+
+This service uses OpenRouter as an API gateway to access various AI models. For the MVP, a free tier model was selected to minimize costs while providing adequate functionality.
+
+### Model Selection
+
+- **Default Model**: The service is configured to use a free tier model for the MVP
+- **Model Flexibility**: Any OpenRouter-supported model can be used by simply changing the `OPENROUTER_MODEL` environment variable
+- **No Code Changes Required**: The same API key works across all models, making it easy to upgrade or switch models as needed
+
+### Available Models
+
+OpenRouter provides access to various models with different capabilities and pricing:
+
+- Free tier models (limited usage)
+- Claude models from Anthropic
+- GPT models from OpenAI
+- Llama models from Meta
+- And many others
+
+Refer to the [OpenRouter documentation](https://openrouter.ai/docs) for the complete list of available models and their capabilities.
 
 ## 📊 API Endpoints
 
@@ -191,6 +219,41 @@ Parse unstructured recipe text into a structured format.
    ```
 5. Set up Nginx as a reverse proxy (recommended)
 6. Configure SSL with Let's Encrypt (recommended)
+
+## 🚢 Deployment
+
+### DigitalOcean
+
+The project includes a comprehensive deployment script (`deploy.sh`) that automates the deployment process to DigitalOcean:
+
+1. Build and push Docker image with the correct platform (linux/amd64)
+2. Create or update a DigitalOcean Droplet
+3. Configure the server with proper environment variables
+4. Set up Docker and pull the latest image
+5. Start the container with proper health checks
+
+To deploy:
+1. Create a `.env.production` file with your production settings
+2. Run the deployment script:
+   ```bash
+   ./deploy.sh
+   ```
+
+Alternatively, for manual deployment:
+1. Build with platform specification:
+   ```bash
+   docker build --platform linux/amd64 -t registry.digitalocean.com/family-recipe-ai/family-recipe-ai:latest .
+   ```
+2. Push the image:
+   ```bash
+   docker push registry.digitalocean.com/family-recipe-ai/family-recipe-ai:latest
+   ```
+3. On the server, create the necessary directories and copy configuration:
+   ```bash
+   mkdir -p /root/family-recipe-ai
+   scp .env.production docker-compose.yml root@YOUR_SERVER_IP:/root/family-recipe-ai/
+   ssh root@YOUR_SERVER_IP "cd /root/family-recipe-ai && mv .env.production .env && docker compose up -d"
+   ```
 
 ## 🔄 Integration with Family Site
 
